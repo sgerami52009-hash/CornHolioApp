@@ -308,11 +308,11 @@ export function applyResult(
   // Validate scores
   if (match.isBye) throw new Error('Cannot score a bye match');
   if (!match.teamA || !match.teamB) throw new Error('Match does not have both teams');
-  if ((scoreA === 21) === (scoreB === 21)) throw new Error('Exactly one score must be 21');
-  if (scoreA < 0 || scoreA > 21 || scoreB < 0 || scoreB > 21) throw new Error('Scores must be 0-21');
+  if (scoreA < 0 || scoreB < 0) throw new Error('Scores must be non-negative');
+  if (scoreA === scoreB) throw new Error('Scores cannot be tied — one team must win');
 
-  const winnerId = scoreA === 21 ? match.teamA : match.teamB;
-  const loserId = scoreA === 21 ? match.teamB : match.teamA;
+  const winnerId = scoreA > scoreB ? match.teamA : match.teamB;
+  const loserId = scoreA > scoreB ? match.teamB : match.teamA;
 
   // Record the result
   results[matchKey] = { winnerId, scoreA, scoreB };

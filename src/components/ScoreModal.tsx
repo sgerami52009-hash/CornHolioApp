@@ -8,25 +8,35 @@ interface Props {
 }
 
 export function ScoreModal({ teamAName, teamBName, onSubmit, onClose }: Props) {
-  const [winner, setWinner] = useState<'a' | 'b' | null>(null);
-  const [loserScore, setLoserScore] = useState('');
+  const [scoreA, setScoreA] = useState('');
+  const [scoreB, setScoreB] = useState('');
   const [error, setError] = useState('');
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
-    if (!winner) {
-      setError('Select a winner');
+    const a = parseInt(scoreA, 10);
+    const b = parseInt(scoreB, 10);
+    if (isNaN(a) || isNaN(b)) {
+      setError('Enter both scores');
       return;
     }
-    const score = parseInt(loserScore, 10);
-    if (isNaN(score) || score < 0 || score > 20) {
-      setError('Loser score must be 0-20');
+    if (a < 0 || b < 0) {
+      setError('Scores must be non-negative');
       return;
     }
-    const scoreA = winner === 'a' ? 21 : score;
-    const scoreB = winner === 'b' ? 21 : score;
-    onSubmit(scoreA, scoreB);
+    if (a === b) {
+      setError('Scores cannot be tied — one team must win');
+      return;
+    }
+    onSubmit(a, b);
   }
+
+  const a = parseInt(scoreA, 10);
+  const b = parseInt(scoreB, 10);
+  const hasScores = !isNaN(a) && !isNaN(b) && a >= 0 && b >= 0;
+  const winnerLabel = hasScores && a !== b
+    ? (a > b ? teamAName : teamBName)
+    : null;
 
   return (
     <div className="fixed inset-0 bg-black/60 flex items-center justify-center p-4 z-50" onClick={onClose}>
@@ -37,51 +47,39 @@ export function ScoreModal({ teamAName, teamBName, onSubmit, onClose }: Props) {
       >
         <h2 className="text-xl font-bold text-white mb-4 text-center">Enter Score</h2>
 
-        <p className="text-slate-400 text-sm mb-4 text-center">Who won?</p>
-
-        <div className="space-y-2 mb-4">
-          <button
-            type="button"
-            onClick={() => { setWinner('a'); setError(''); }}
-            className={`w-full p-3 rounded-xl font-semibold transition text-left ${
-              winner === 'a'
-                ? 'bg-green-600 text-white border-2 border-green-400'
-                : 'bg-slate-700 text-slate-300 border-2 border-slate-600 hover:border-slate-500'
-            }`}
-          >
-            {teamAName}
-            {winner === 'a' && <span className="float-right">21</span>}
-          </button>
-
-          <button
-            type="button"
-            onClick={() => { setWinner('b'); setError(''); }}
-            className={`w-full p-3 rounded-xl font-semibold transition text-left ${
-              winner === 'b'
-                ? 'bg-green-600 text-white border-2 border-green-400'
-                : 'bg-slate-700 text-slate-300 border-2 border-slate-600 hover:border-slate-500'
-            }`}
-          >
-            {teamBName}
-            {winner === 'b' && <span className="float-right">21</span>}
-          </button>
-        </div>
-
-        {winner && (
-          <div className="mb-4">
-            <label className="text-slate-400 text-sm block mb-1">
-              {winner === 'a' ? teamBName : teamAName}'s score (0-20)
-            </label>
+        <div className="space-y-3 mb-4">
+          <div>
+            <label className="text-slate-400 text-sm block mb-1">{teamAName}</label>
             <input
               type="number"
               min="0"
-              max="20"
-              value={loserScore}
-              onChange={e => { setLoserScore(e.target.value); setError(''); }}
+              value={scoreA}
+              onChange={e => { setScoreA(e.target.value); setError(''); }}
               autoFocus
+              placeholder="Score"
               className="w-full px-4 py-3 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none text-center text-2xl font-bold"
             />
           </div>
+
+          <div className="text-center text-slate-500 text-sm font-semibold">vs</div>
+
+          <div>
+            <label className="text-slate-400 text-sm block mb-1">{teamBName}</label>
+            <input
+              type="number"
+              min="0"
+              value={scoreB}
+              onChange={e => { setScoreB(e.target.value); setError(''); }}
+              placeholder="Score"
+              className="w-full px-4 py-3 rounded-xl bg-slate-700 text-white border border-slate-600 focus:border-blue-500 focus:outline-none text-center text-2xl font-bold"
+            />
+          </div>
+        </div>
+
+        {winnerLabel && (
+          <p className="text-green-400 text-sm text-center mb-3 font-semibold">
+            Winner: {winnerLabel}
+          </p>
         )}
 
         {error && <p className="text-red-400 text-sm mb-3 text-center">{error}</p>}
@@ -96,7 +94,7 @@ export function ScoreModal({ teamAName, teamBName, onSubmit, onClose }: Props) {
           </button>
           <button
             type="submit"
-            disabled={!winner}
+            disabled={!hasScores || a === b}
             className="flex-1 py-3 rounded-xl bg-blue-600 text-white font-semibold hover:bg-blue-700 disabled:opacity-50 transition"
           >
             Submit

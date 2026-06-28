@@ -69,8 +69,8 @@ create table matches (
   slot                int not null,
   team_a_id           uuid references teams(id) on delete set null,
   team_b_id           uuid references teams(id) on delete set null,
-  score_a             int check (score_a between 0 and 21),
-  score_b             int check (score_b between 0 and 21),
+  score_a             int check (score_a >= 0),
+  score_b             int check (score_b >= 0),
   winner_id           uuid references teams(id) on delete set null,
   next_match_id       uuid references matches(id) on delete set null,
   next_match_slot     char(1),
@@ -87,9 +87,7 @@ create index on matches (next_match_id);
 alter table matches add constraint valid_final_score check (
   status <> 'complete'
   or is_bye
-  or (
-    (score_a = 21 and score_b < 21) or (score_b = 21 and score_a < 21)
-  )
+  or (score_a <> score_b)
 );
 
 -- ============ ROW LEVEL SECURITY ============

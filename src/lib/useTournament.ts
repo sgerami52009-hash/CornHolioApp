@@ -187,7 +187,10 @@ export function useTournament() {
 
       // Determine winner
       const match = state.bracket.matches.find(m => m.key === matchKey)!;
-      const winnerId = scoreA === 21 ? match.teamA! : match.teamB!;
+      const winnerId = scoreA > scoreB ? match.teamA! : match.teamB!;
+      const loserId = scoreA > scoreB ? match.teamB! : match.teamA!;
+      const winnerScore = Math.max(scoreA, scoreB);
+      const loserScore = Math.min(scoreA, scoreB);
 
       // Update the match in DB
       await updateMatch(dbMatchId, {
@@ -201,13 +204,12 @@ export function useTournament() {
       const winnerTeam = state.teams.find(t => t.id === winnerId)!;
       await updateTeamStats(winnerId, {
         wins: winnerTeam.wins + 1,
-        total_score: winnerTeam.total_score + (scoreA === 21 ? scoreA : scoreB),
+        total_score: winnerTeam.total_score + winnerScore,
       });
 
-      const loserId = scoreA === 21 ? match.teamB! : match.teamA!;
       const loserTeam = state.teams.find(t => t.id === loserId)!;
       await updateTeamStats(loserId, {
-        total_score: loserTeam.total_score + (scoreA === 21 ? scoreB : scoreA),
+        total_score: loserTeam.total_score + loserScore,
       });
 
       // Update per-player standings: both players on the winning team get +1 win

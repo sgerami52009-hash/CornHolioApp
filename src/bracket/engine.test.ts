@@ -37,12 +37,12 @@ function simulateSingleElim(teamCount: number) {
 
     for (const match of roundMatches) {
       const scoreA = 21;
-      const scoreB = Math.floor(Math.random() * 21);
+      const scoreB = Math.floor(Math.random() * 20);
 
       const result = applyResult(bracket, results, match.key, scoreA, scoreB);
 
       // Track scoring
-      const winnerId = scoreA === 21 ? match.teamA! : match.teamB!;
+      const winnerId = scoreA > scoreB ? match.teamA! : match.teamB!;
       teamWins[winnerId] = (teamWins[winnerId] || 0) + 1;
       teamScores[match.teamA!] = (teamScores[match.teamA!] || 0) + scoreA;
       teamScores[match.teamB!] = (teamScores[match.teamB!] || 0) + scoreB;
@@ -225,14 +225,24 @@ describe('resolveAllByes', () => {
 });
 
 describe('applyResult', () => {
-  it('rejects non-21 winners', () => {
+  it('rejects tied scores', () => {
     const teams = makeTeams(8);
     const bracket = generateBracket(teams, 'single');
     const results: Record<string, { winnerId: string; scoreA: number; scoreB: number }> = {};
 
     const match = bracket.matches.find(m => m.teamA && m.teamB && !m.isBye)!;
-    expect(() => applyResult(bracket, results, match.key, 20, 15)).toThrow();
+    expect(() => applyResult(bracket, results, match.key, 15, 15)).toThrow();
     expect(() => applyResult(bracket, results, match.key, 21, 21)).toThrow();
+  });
+
+  it('accepts scores higher than 21', () => {
+    const teams = makeTeams(8);
+    const bracket = generateBracket(teams, 'single');
+    const results: Record<string, { winnerId: string; scoreA: number; scoreB: number }> = {};
+
+    const match = bracket.matches.find(m => m.teamA && m.teamB && !m.isBye)!;
+    const result = applyResult(bracket, results, match.key, 25, 23);
+    expect(result.updatedMatches.length).toBeGreaterThan(0);
   });
 
   it('advances winner to next match', () => {

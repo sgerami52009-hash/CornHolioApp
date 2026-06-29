@@ -40,6 +40,15 @@ function matchKey(m: { bracket: string; round: number; slot: number }): string {
   return `${prefix}-${m.round}-${m.slot}`;
 }
 
+// Deterministic "coin flip" for first throw based on match id
+function firstThrow(matchId: string): 'a' | 'b' {
+  let hash = 0;
+  for (let i = 0; i < matchId.length; i++) {
+    hash = ((hash << 5) - hash + matchId.charCodeAt(i)) | 0;
+  }
+  return (hash & 1) === 0 ? 'a' : 'b';
+}
+
 function canEditMatch(match: MatchData, allMatches: MatchData[]): boolean {
   if (match.status !== 'complete') return false;
   // Can edit if no dependent match has started (has a result)
@@ -135,33 +144,44 @@ export function BracketView({ matches, teams, onScore, readOnly }: Props) {
                             : 'border-slate-700 bg-slate-800/50 opacity-60'
                       } ${match.is_bye ? 'opacity-40' : ''}`}
                     >
-                      <div className={`px-3 py-2 flex justify-between items-center ${
-                        match.winner_id === match.team_a_id && match.status === 'complete'
-                          ? 'bg-green-900/30' : ''
-                      }`}>
-                        <span className={`text-sm truncate ${
-                          match.winner_id === match.team_a_id ? 'text-green-400 font-bold' : 'text-white'
-                        }`}>
-                          {getTeamName(teams, match.team_a_id)}
-                        </span>
-                        {match.score_a !== null && (
-                          <span className="text-sm font-mono text-slate-300 ml-2">{match.score_a}</span>
-                        )}
-                      </div>
-                      <div className="border-t border-slate-700" />
-                      <div className={`px-3 py-2 flex justify-between items-center ${
-                        match.winner_id === match.team_b_id && match.status === 'complete'
-                          ? 'bg-green-900/30' : ''
-                      }`}>
-                        <span className={`text-sm truncate ${
-                          match.winner_id === match.team_b_id ? 'text-green-400 font-bold' : 'text-white'
-                        }`}>
-                          {match.is_bye ? 'BYE' : getTeamName(teams, match.team_b_id)}
-                        </span>
-                        {match.score_b !== null && (
-                          <span className="text-sm font-mono text-slate-300 ml-2">{match.score_b}</span>
-                        )}
-                      </div>
+                      {(() => {
+                        const ft = !match.is_bye && match.status === 'ready' && match.team_a_id && match.team_b_id
+                          ? firstThrow(match.id)
+                          : null;
+                        return (
+                          <>
+                            <div className={`px-3 py-2 flex justify-between items-center ${
+                              match.winner_id === match.team_a_id && match.status === 'complete'
+                                ? 'bg-green-900/30' : ''
+                            }`}>
+                              <span className={`text-sm truncate ${
+                                match.winner_id === match.team_a_id ? 'text-green-400 font-bold' : 'text-white'
+                              }`}>
+                                {ft === 'a' && <span className="text-amber-400 text-xs mr-1">1st</span>}
+                                {getTeamName(teams, match.team_a_id)}
+                              </span>
+                              {match.score_a !== null && (
+                                <span className="text-sm font-mono text-slate-300 ml-2">{match.score_a}</span>
+                              )}
+                            </div>
+                            <div className="border-t border-slate-700" />
+                            <div className={`px-3 py-2 flex justify-between items-center ${
+                              match.winner_id === match.team_b_id && match.status === 'complete'
+                                ? 'bg-green-900/30' : ''
+                            }`}>
+                              <span className={`text-sm truncate ${
+                                match.winner_id === match.team_b_id ? 'text-green-400 font-bold' : 'text-white'
+                              }`}>
+                                {ft === 'b' && <span className="text-amber-400 text-xs mr-1">1st</span>}
+                                {match.is_bye ? 'BYE' : getTeamName(teams, match.team_b_id)}
+                              </span>
+                              {match.score_b !== null && (
+                                <span className="text-sm font-mono text-slate-300 ml-2">{match.score_b}</span>
+                              )}
+                            </div>
+                          </>
+                        );
+                      })()}
                     </button>
                   ))}
                 </div>

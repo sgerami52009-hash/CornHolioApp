@@ -160,6 +160,10 @@ export function OrganizerPage() {
           setPlayerNames(names);
           setStep('teams');
         }}
+        onClearHistory={async () => {
+          await resetPlayerStandings();
+          setPlayerStandings([]);
+        }}
       />
     );
   }

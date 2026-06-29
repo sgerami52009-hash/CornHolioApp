@@ -5,13 +5,15 @@ const PLAYER_COUNTS = [8, 10, 12, 14, 16] as const;
 interface Props {
   existingPlayers?: string[];
   onComplete: (names: string[]) => void;
+  onClearHistory?: () => void;
 }
 
-export function PlayerSetup({ existingPlayers = [], onComplete }: Props) {
+export function PlayerSetup({ existingPlayers = [], onComplete, onClearHistory }: Props) {
   const [playerCount, setPlayerCount] = useState<8 | 10 | 12 | 14 | 16>(12);
   const [names, setNames] = useState<string[]>(() => Array(16).fill(''));
   const [errors, setErrors] = useState<string[]>([]);
   const [showExisting, setShowExisting] = useState(false);
+  const [confirmDeleteHistory, setConfirmDeleteHistory] = useState(false);
 
   function handleCountChange(count: 8 | 10 | 12 | 14 | 16) {
     setPlayerCount(count);
@@ -136,6 +138,31 @@ export function PlayerSetup({ existingPlayers = [], onComplete }: Props) {
                   >
                     Clear All
                   </button>
+                  {onClearHistory && (
+                    confirmDeleteHistory ? (
+                      <>
+                        <button
+                          onClick={() => { onClearHistory(); setConfirmDeleteHistory(false); }}
+                          className="px-3 py-1.5 rounded-lg bg-red-600 text-white text-xs font-semibold hover:bg-red-700 transition"
+                        >
+                          Confirm Delete
+                        </button>
+                        <button
+                          onClick={() => setConfirmDeleteHistory(false)}
+                          className="px-3 py-1.5 rounded-lg bg-slate-700 text-slate-300 text-xs font-semibold hover:bg-slate-600 transition"
+                        >
+                          Cancel
+                        </button>
+                      </>
+                    ) : (
+                      <button
+                        onClick={() => setConfirmDeleteHistory(true)}
+                        className="px-3 py-1.5 rounded-lg bg-slate-700 text-red-400 text-xs font-semibold hover:bg-slate-600 transition"
+                      >
+                        Delete History
+                      </button>
+                    )
+                  )}
                 </div>
                 <div className="flex flex-wrap gap-1.5">
                   {existingPlayers.map(name => {

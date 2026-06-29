@@ -20,6 +20,7 @@ export function OrganizerPage() {
   const [teamDefs, setTeamDefs] = useState<Array<{ name: string; player1Index: number; player2Index: number }>>([]);
   const [activeView, setActiveView] = useState<'bracket' | 'leaderboard'>('bracket');
   const [tournamentName] = useState('Cornhole Tournament');
+  const [copied, setCopied] = useState(false);
   const [playerStandings, setPlayerStandings] = useState<PlayerStanding[]>([]);
 
   const fetchStandings = useCallback(async () => {
@@ -66,11 +67,15 @@ export function OrganizerPage() {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(shareUrl);
+                setCopied(true);
+                setTimeout(() => setCopied(false), 2000);
               }}
-              className="px-3 py-2 rounded-lg bg-slate-700 text-slate-300 text-sm hover:bg-slate-600 transition"
+              className={`px-3 py-2 rounded-lg text-sm transition ${
+                copied ? 'bg-green-600 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
               title="Copy share link"
             >
-              Share Link
+              {copied ? 'Copied!' : 'Share Link'}
             </button>
           </div>
 
